@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    print("ENTERED")
     return render_template('index.html', test = "as")
 
 if __name__ == '__main__':
