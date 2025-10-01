@@ -1,13 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Text to Speech</title>
-</head>
-<body>
-    <h1>Text to Speech {{ test }}</h1>
-    <form method="post">
-        <textarea name="text" rows="5" cols="40"></textarea><br>
-        <input type="submit" value="Convert">
-    </form>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title_content %} Home Page {% endblock %}
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-sm">
+      <div class="card" style="width: 18rem;">
+          <img src="..." class="card-img-top" alt="...">
+          <div class="card-body">
+            <h5 class="card-title">Sample Listing</h5>
+            <p class="card-text">Listing description.</p>
+            <a href="#" class="btn btn-primary">Go somewhere</a>
+          </div>
+        </div>
+    </div>
+      <div class="col-sm">
+      <div class="card" style="width: 18rem;">
+          <img src="..." class="card-img-top" alt="...">
+          <div class="card-body">
+            <h5 class="card-title">Sample Listing</h5>
+            <p class="card-text">Listing description.</p>
+            <a href="#" class="btn btn-primary">Go somewhere</a>
+          </div>
+        </div>
+    </div>
+      <div class="col-sm">
+      <div class="card" style="width: 18rem;">
+          <img src="..." class="card-img-top" alt="...">
+          <div class="card-body">
+            <h5 class="card-title">Sample Listing</h5>
+            <p class="card-text">Listing description.</p>
+            <a href="#" class="btn btn-primary">Go somewhere</a>
+          </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
