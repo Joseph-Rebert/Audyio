@@ -1,10 +1,28 @@
 {% extends 'base.html' %}
 {% block title_content %} Home Page {% endblock %}
 {% block content %}
-<form action = "#" method="post">
-    <p>Input text here</p>
-    <p><input type="text" name="input"></p>
-    <p><input type="submit" value="submit"></p>
-</form>
+
+<div class="text-center">
+    {% if user %}
+    <h1>Hello, {{ user.get("cognito:username", "User") }}! 👋</h1>
+    <p class="lead">Welcome back to your Text-to-Speech application.</p>
+    <form action="#" method="post">
+        <p>Input text here</p>
+        <p><input type="text" name="input"></p>
+        <p><input type="submit" value="submit"></p>
+    </form>
+    <div class="mt-4">
+        <p>You're logged in as <strong>{{ user.get("email") }}</strong></p>
+    </div>
+    {% else %}
+    <h1>Welcome to Text-to-Speech! 🎙️</h1>
+    <p class="lead">Transform your text into natural-sounding speech.</p>
+    <div class="mt-4">
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Get Started - Login</a>
+    </div>
+    {% endif %}
+</div>
+
+
 {% endblock %}
 

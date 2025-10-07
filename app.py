@@ -29,20 +29,8 @@ oauth.register(
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    # new_user = User(
-    #     email='testuser2@example.com',
-    #     password_hash='hashed_password_here2',
-    #     tier='starter'
-    # )
-    # db.session.add(new_user)
-    # db.session.commit()
-    # print(f"New user added with ID: {new_user.id}")
     user = session.get('user')
-    print(user)
-    if user:
-        return f'Hello, {user.get("cognito:username", "User")}. <a href="/logout">Logout</a>'
-    else:
-        return f'Welcome! Please <a href="/login">Login</a>.'
+    return render_template('index.html', user=user)
 
 @app.route('/login')
 def login():
@@ -58,11 +46,28 @@ def authorize():
         token = oauth.oidc.authorize_access_token()
         user = token['userinfo']
         session['user'] = user
+        attempt_add_user_to_database(user['email'], user['cognito:username'], 'starter')
         return redirect(url_for('home'))
 
 @app.route('/pricing')
 def pricing():
     return render_template('pricing.html')
+
+
+def attempt_add_user_to_database(email, username, tier):
+    # Check if user already exists
+    existing_user = User.query.filter_by(email=email).first()
+    
+    if existing_user:
+        print(f"User with email {email} already exists with ID: {existing_user.id}")
+        return existing_user
+    
+    # User doesn't exist, create new one
+    user = User(email=email, username=username, tier=tier)
+    db.session.add(user)
+    db.session.commit()
+    print(f"New user added with ID: {user.id}")
+    return user
 
 if __name__ == '__main__':
     app.run(host="localhost", port=5000, debug=True)
