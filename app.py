@@ -29,15 +29,16 @@ oauth.register(
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    new_user = User(
-        email='testuser@example.com',
-        password_hash='hashed_password_here',
-        tier='starter'
-    )
-    db.session.add(new_user)
-    db.session.commit()
-    print(f"New user added with ID: {new_user.id}")
+    # new_user = User(
+    #     email='testuser2@example.com',
+    #     password_hash='hashed_password_here2',
+    #     tier='starter'
+    # )
+    # db.session.add(new_user)
+    # db.session.commit()
+    # print(f"New user added with ID: {new_user.id}")
     user = session.get('user')
+    print(user)
     if user:
         return f'Hello, {user.get("cognito:username", "User")}. <a href="/logout">Logout</a>'
     else:
@@ -45,9 +46,6 @@ def home():
 
 @app.route('/login')
 def login():
-    # Redirect to Cognito's authorization endpoint
-    # redirect_uri = url_for('authorize', _external=True)
-    # return oauth.cognito.authorize_redirect(redirect_uri)
     return oauth.oidc.authorize_redirect('http://localhost:5000/authorize')
 
 @app.route('/logout')
