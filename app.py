@@ -34,6 +34,8 @@ oauth.register(
 def home():
     user = session.get('user')
     input_text = request.form.get('input_text')
+
+
     if input_text:
         try:
             response = polly.synthesize_speech(
