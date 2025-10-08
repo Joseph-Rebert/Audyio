@@ -1,6 +1,9 @@
+from contextlib import closing
+from io import BytesIO
+
 from flask_sqlalchemy import SQLAlchemy
 import boto3
-from flask import Flask, render_template, url_for, session, redirect
+from flask import Flask, render_template, url_for, session, redirect, request, send_file
 from authlib.integrations.flask_client import OAuth
 import os
 from models.user import User, db
@@ -30,6 +33,22 @@ oauth.register(
 @app.route('/', methods=['GET', 'POST'])
 def home():
     user = session.get('user')
+    input_text = request.form.get('input_text')
+    if input_text:
+        try:
+            response = polly.synthesize_speech(
+            OutputFormat='mp3',
+            Text=input_text,
+            VoiceId='Joanna')
+        except:
+            print("Error in synthesize speech")
+
+        if "AudioStream" in response:
+            with closing(response["AudioStream"]) as stream:
+                audio_data = BytesIO(stream.read())
+                audio_data.seek(0)
+                return send_file(audio_data, mimetype='audio/mp3', as_attachment=True, download_name='speech.mp3')
+
     return render_template('index.html', user=user)
 
 @app.route('/login')
