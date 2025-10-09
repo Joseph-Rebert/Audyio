@@ -23,9 +23,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 oauth = OAuth(app)
-print(os.getenv('CLIENT_ID'))
-print(os.getenv('CLIENT_SECRET'))
-# Configure Cognito OAuth
+
 oauth.register(
   name='oidc',
   authority='https://cognito-idp.us-east-2.amazonaws.com/us-east-2_znDYdNNxu',
