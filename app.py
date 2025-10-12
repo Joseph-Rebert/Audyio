@@ -128,4 +128,4 @@ def update_users_word_count(email, words_used):
         return False
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8000)
