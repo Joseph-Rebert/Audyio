@@ -11,18 +11,18 @@ from models.user import User, db
 
 STARTER_TIER = 220000
 
-app = Flask(__name__)
-polly = boto3.client('polly')
-app.secret_key = os.urandom(24)
+application = Flask(__name__)
+polly = boto3.client('polly', region_name='us-east-2')
+application.secret_key = os.urandom(24)
 dotenv_path = find_dotenv()
 load_dotenv(dotenv_path)
+# Change 'tts-db-1' to your actual database name (e.g., 'postgres' or another existing db)
+application.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQL_URL')
+application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQL_URL')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(application)
 
-db.init_app(app)
-
-oauth = OAuth(app)
+oauth = OAuth(application)
 
 oauth.register(
   name='oidc',
@@ -33,7 +33,7 @@ oauth.register(
   client_kwargs={'scope': 'email openid phone'}
 )
 
-@app.route('/', methods=['GET', 'POST'])
+@application.route('/', methods=['GET', 'POST'])
 def home():
     user = session.get('user')
     user_tier = session.get('user_tier')
@@ -62,17 +62,18 @@ def home():
 
     return render_template('index.html', user=user, user_tier=user_tier)
 
-@app.route('/login')
+@application.route('/login')
 def login():
-    return oauth.oidc.authorize_redirect('http://localhost:5000/authorize')
+    redirect_uri = request.host_url.rstrip('/') + '/authorize'
+    return oauth.oidc.authorize_redirect(redirect_uri)
 
-@app.route('/logout')
+@application.route('/logout')
 def logout():
     session.pop('user', None)
     session.pop('user_tier', None)
     return redirect(url_for('home'))
 
-@app.route('/authorize')
+@application.route('/authorize')
 def authorize():
     token = oauth.oidc.authorize_access_token()
     user = token['userinfo']
@@ -82,7 +83,7 @@ def authorize():
     return redirect(url_for('home'))
 
 
-@app.route('/pricing')
+@application.route('/pricing')
 def pricing():
     user = session.get('user')
     user_tier = session.get('user_tier')
@@ -128,4 +129,4 @@ def update_users_word_count(email, words_used):
         return False
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    application.run(debug=True)
