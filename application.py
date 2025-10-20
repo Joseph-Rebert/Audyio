@@ -1,13 +1,16 @@
 from contextlib import closing
 from io import BytesIO
 
+import stripe
 from dotenv import load_dotenv, find_dotenv
 from flask_sqlalchemy import SQLAlchemy
 import boto3
-from flask import Flask, render_template, url_for, session, redirect, request, send_file
+from flask import Flask, render_template, url_for, session, redirect, request, send_file, jsonify
 from authlib.integrations.flask_client import OAuth
 import os
 from models.user import User, db
+
+local_env = True
 
 STARTER_TIER = 220000
 
@@ -20,18 +23,20 @@ load_dotenv(dotenv_path)
 application.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQL_URL')
 application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+stripe.api_key = os.getenv('STRIPE_SECRET')
 db.init_app(application)
 
 oauth = OAuth(application)
 
 oauth.register(
-  name='oidc',
-  authority='https://cognito-idp.us-east-2.amazonaws.com/us-east-2_znDYdNNxu',
-  client_id=os.getenv('CLIENT_ID'),
-  client_secret=os.getenv('CLIENT_SECRET'),
-  server_metadata_url='https://cognito-idp.us-east-2.amazonaws.com/us-east-2_znDYdNNxu/.well-known/openid-configuration',
-  client_kwargs={'scope': 'email openid phone'}
+    name='oidc',
+    authority='https://cognito-idp.us-east-2.amazonaws.com/us-east-2_znDYdNNxu',
+    client_id=os.getenv('CLIENT_ID'),
+    client_secret=os.getenv('CLIENT_SECRET'),
+    server_metadata_url='https://cognito-idp.us-east-2.amazonaws.com/us-east-2_znDYdNNxu/.well-known/openid-configuration',
+    client_kwargs={'scope': 'email openid phone'}
 )
+
 
 @application.route('/', methods=['GET', 'POST'])
 def home():
@@ -50,8 +55,10 @@ def home():
                     VoiceId='Joanna')
             else:
                 response = None
+                return "Cant use tts no more words left"
         except:
             print("Error in synthesize speech")
+            return "Error in synthesize speech"
 
         print(response)
         if response is not None and "AudioStream" in response:
@@ -59,19 +66,24 @@ def home():
                 audio_data = BytesIO(stream.read())
                 audio_data.seek(0)
                 return send_file(audio_data, mimetype='audio/mp3', as_attachment=True, download_name='speech.mp3')
+        else:
+            return "Error in synthesize speech 2"
 
     return render_template('index.html', user=user, user_tier=user_tier)
+
 
 @application.route('/login')
 def login():
     redirect_uri = request.host_url.rstrip('/') + '/authorize'
     return oauth.oidc.authorize_redirect(redirect_uri)
 
+
 @application.route('/logout')
 def logout():
     session.pop('user', None)
     session.pop('user_tier', None)
     return redirect(url_for('home'))
+
 
 @application.route('/authorize')
 def authorize():
@@ -91,14 +103,12 @@ def pricing():
 
 
 def attempt_add_user_to_database(email, username, tier):
-    # Check if user already exists
     existing_user = User.query.filter_by(email=email).first()
 
     if existing_user:
         print(f"User with email {email} already exists with ID: {existing_user.id}")
         return existing_user
 
-    # User doesn't exist, create new one
     user = User(email=email, username=username, tier=tier)
     db.session.add(user)
     db.session.commit()
@@ -128,5 +138,46 @@ def update_users_word_count(email, words_used):
         db.session.rollback()
         return False
 
+
+@application.route('/create_checkout_session', methods=['GET'])
+def create_checkout_session():
+    if local_env:
+        session = stripe.checkout.Session.create(
+            line_items=[
+                {
+                    "price": "price_1SKISxPbLAL4Mjp0LYQBhsjX",
+                    "quantity": 1
+                }
+            ],
+            mode='subscription',
+            success_url='http://localhost:5000/success',  # need to change on live servers
+            cancel_url='http://localhost:5000/cancel',  # need to change on live servers
+            automatic_tax={'enabled': True}
+        )
+    else:
+        session = stripe.checkout.Session.create(
+            line_items=[
+                {
+                    "price": "price_1SKISxPbLAL4Mjp0LYQBhsjX",
+                    "quantity": 1
+                }
+            ],
+            mode='subscription',
+            success_url='https://audyio.com/success',  # need to change on live servers
+            cancel_url='https://audyio.com/cancel',  # need to change on live servers
+            automatic_tax={'enabled': True}
+        )
+
+    return redirect(session.url, code=303)
+
+
+@application.route('/success')
+def success():
+    return 'Your subscription has been activated!'
+
+
 if __name__ == '__main__':
-    application.run(debug=True)
+    if local_env:
+        application.run(host="localhost", port=5000, debug=True)
+    else:
+        application.run(debug=True)
