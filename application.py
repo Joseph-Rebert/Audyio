@@ -19,7 +19,6 @@ polly = boto3.client('polly', region_name='us-east-2')
 application.secret_key = os.urandom(24)
 dotenv_path = find_dotenv()
 load_dotenv(dotenv_path)
-# Change 'tts-db-1' to your actual database name (e.g., 'postgres' or another existing db)
 application.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQL_URL')
 application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
