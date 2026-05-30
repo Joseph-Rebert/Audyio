@@ -126,5 +126,5 @@ This project is currently in development.
 **Joseph Rebert**
 
 * GitHub: [Joseph Rebert](https://github.com/Joseph-Rebert)
-* LinkedIn: https://www.linkedin.com/in/joseph-rebert-9243192b3/
-* Portfolio: https://joseph-rebert.github.io/Portfolio-Website/
+* LinkedIn: [Joseph Rebert](https://www.linkedin.com/in/joseph-rebert-9243192b3/)
+* Portfolio: [Portfolio Website](https://joseph-rebert.github.io/Portfolio-Website/)
